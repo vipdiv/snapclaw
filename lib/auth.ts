@@ -18,7 +18,12 @@ export function getOrCreateSid() {
   let sid = c.get(sidCookie)?.value;
   if (!sid) {
     sid = crypto.randomBytes(16).toString('hex');
-    c.set(sidCookie, sid, { httpOnly: true, sameSite: 'lax', secure: false, path: '/' });
+    c.set(sidCookie, sid, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+    });
   }
   return sid;
 }

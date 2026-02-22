@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { recognize } from 'tesseract.js';
 
 const categories = [
@@ -43,8 +43,14 @@ export default function HomePage() {
   const [extractedText, setExtractedText] = useState('');
   const [intent, setIntent] = useState<Intent>('SIGNAL');
   const [message, setMessage] = useState('');
+  const [connected, setConnected] = useState(false);
 
-  const connected = useMemo(() => typeof window !== 'undefined' && document.cookie.includes('snapclaw_sid='), []);
+  useEffect(() => {
+    fetch('/api/auth/google/status', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((d) => setConnected(Boolean(d.connected)))
+      .catch(() => setConnected(false));
+  }, []);
 
   const onFile = async (file?: File) => {
     if (!file) return;
@@ -82,6 +88,7 @@ export default function HomePage() {
       if (json.connectRequired) connectGoogle();
       return;
     }
+    setConnected(true);
     setMessage(json.message || 'Done');
   };
 
@@ -110,7 +117,7 @@ export default function HomePage() {
           Drag & drop image or tap to upload
         </div>
         <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={(e) => onFile(e.target.files?.[0])} />
-        {imagePreview && <Image src={imagePreview} width={640} height={340} alt="Preview" style={{ width: '100%', height: 'auto', borderRadius: 10 }} />}
+        {imagePreview && <img src={imagePreview} alt="Preview" style={{ width: '100%', height: 'auto', borderRadius: 10 }} />}
         {loading && <div className="small muted">Running OCR...</div>}
       </section>
 
